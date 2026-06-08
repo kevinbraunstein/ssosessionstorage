@@ -92,10 +92,8 @@
 
         // Set default SSO URL based on current location as a helper
         function initDefaultUrls() {
-            const currentPath = window.location.pathname;
-            const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
             // Default to same origin for local testing convenience, but user can change it
-            document.getElementById('ssoUrl').value = window.location.origin + dirPath + '/sso.html';
+            document.getElementById('ssoUrl').value = 'https://kevin-braunstein.github.io/sessionstoragessodomainb/sso.html';
             generateNewState();
         }
 
