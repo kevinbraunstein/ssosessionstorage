@@ -146,7 +146,7 @@
                 destination.searchParams.set('return_url', transaction.redirect_uri);
                 
                 // Alert success and redirect
-                alert('Successfully set Session Storage!\n\nKey: ' + key + '\n\nRedirecting to Domain B...');
+                // alert('Successfully set Session Storage!\n\nKey: ' + key + '\n\nRedirecting to Domain B...');
                 window.location.href = destination.toString();
             } catch (e) {
                 alert('Invalid SSO Page URL. Please enter a valid absolute URL.');
