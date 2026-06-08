@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain A - Callback Handler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-indigo-600 text-white py-6 shadow-md">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold">Domain A: Callback Handler</h1>
+            <p class="text-indigo-100 text-sm mt-1">Step 3: Validate state token and display test results</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 flex-grow max-w-3xl">
+        
+        <!-- TEST RESULT BANNER -->
+        <div id="resultBanner" class="rounded-xl p-6 mb-6 shadow-md flex items-start gap-4 border">
+            <!-- Dynamic Content will be injected here -->
+            <div class="animate-pulse flex space-x-4 w-full">
+                <div class="flex-1 space-y-4 py-1">
+                    <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-slate-200 rounded"></div>
+                        <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTICS CARD -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-slate-100">
+            <h2 class="text-xl font-semibold mb-4 text-slate-900">Diagnostics & Token Comparison</h2>
+            
+            <div class="space-y-4">
+                <div class="border-b border-slate-100 pb-4">
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">1. URL Query Parameters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <span class="text-xs text-slate-500 block">URL "state" parameter:</span>
+                            <span id="urlState" class="font-mono text-sm text-slate-700 break-all">Checking...</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <span class="text-xs text-slate-500 block">URL "code" parameter:</span>
+                            <span id="urlCode" class="font-mono text-sm text-slate-700 break-all">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-100 pb-4">
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">2. Stored Session Storage Transaction</h3>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                        <span class="text-xs text-slate-500 block mb-1">Key: <span id="targetKeyName" class="font-mono text-indigo-600 font-semibold">a0.spajs.txs.test_client_id</span></span>
+                        <div id="storedTransactionDisplay" class="font-mono text-sm text-slate-700 whitespace-pre-wrap break-all">Checking...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">3. Comparison Verdict</h3>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-100 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Transaction Key Exists?</span>
+                            <span id="verdictExists" class="font-semibold">Checking...</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">State Tokens Match?</span>
+                            <span id="verdictMatch" class="font-semibold">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAW STORAGE VIEW -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-slate-100">
+            <h3 class="text-lg font-semibold mb-3 text-slate-900">Raw Session Storage (All Keys)</h3>
+            <div id="rawStorageDisplay" class="bg-slate-900 text-emerald-400 p-4 rounded-lg font-mono text-xs overflow-x-auto min-h-[60px]">
+                Loading...
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex gap-4">
+            <button onclick="startOver()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-center">
+                Start Over (Go to Step 1)
+            </button>
+            <button onclick="clearStorage()" class="py-3 px-6 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-all">
+                Clear Storage
+            </button>
+        </div>
+    </main>
+
+    <footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <p>Session Storage Tester &copy; 2026</p>
+    </footer>
+
+    <script>
+        const TARGET_KEY = 'a0.spajs.txs.test_client_id';
+
+        function runDiagnostics() {
+            document.getElementById('targetKeyName').textContent = TARGET_KEY;
+
+            // 1. Parse URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const urlState = params.get('state') || '';
+            const urlCode = params.get('code') || '';
+
+            document.getElementById('urlState').textContent = urlState ? urlState : '[Missing state in URL]';
+            document.getElementById('urlCode').textContent = urlCode ? urlCode : '[Missing code in URL]';
+
+            // 2. Retrieve from sessionStorage
+            const rawTransaction = sessionStorage.getItem(TARGET_KEY);
+            let transaction = null;
+            let storedState = '';
+
+            if (rawTransaction) {
+                try {
+                    transaction = JSON.parse(rawTransaction);
+                    storedState = transaction.state || '';
+                    document.getElementById('storedTransactionDisplay').textContent = JSON.stringify(transaction, null, 2);
+                } catch {
+                    storedState = rawTransaction;
+                    document.getElementById('storedTransactionDisplay').textContent = rawTransaction;
+                }
+            } else {
+                document.getElementById('storedTransactionDisplay').innerHTML = '<span class="text-rose-500 font-semibold">// Key not found in Session Storage!</span>';
+            }
+
+            // 3. Perform comparison checks
+            const keyExists = !!rawTransaction;
+            const stateMatches = keyExists && (urlState === storedState) && urlState !== '';
+
+            // Update Verdict display
+            const verdictExistsEl = document.getElementById('verdictExists');
+            if (keyExists) {
+                verdictExistsEl.textContent = 'YES';
+                verdictExistsEl.className = 'font-semibold text-emerald-600';
+            } else {
+                verdictExistsEl.textContent = 'NO';
+                verdictExistsEl.className = 'font-semibold text-rose-600';
+            }
+
+            const verdictMatchEl = document.getElementById('verdictMatch');
+            if (stateMatches) {
+                verdictMatchEl.textContent = 'YES (MATCH)';
+                verdictMatchEl.className = 'font-semibold text-emerald-600';
+            } else if (!keyExists) {
+                verdictMatchEl.textContent = 'N/A (No stored transaction)';
+                verdictMatchEl.className = 'font-semibold text-slate-400';
+            } else {
+                verdictMatchEl.textContent = 'NO (MISMATCH)';
+                verdictMatchEl.className = 'font-semibold text-rose-600';
+            }
+
+            // 4. Render Banner
+            renderBanner(keyExists, stateMatches, urlState, storedState);
+
+            // 5. Render Raw Storage
+            updateRawStorageDisplay();
+        }
+
+        function renderBanner(keyExists, stateMatches, urlState, storedState) {
+            const banner = document.getElementById('resultBanner');
+            
+            if (keyExists && stateMatches) {
+                // SUCCESS CASE
+                banner.className = "bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-6 shadow-md flex items-start gap-4";
+                banner.innerHTML = `
+                    <div class="p-2 bg-emerald-500 text-white rounded-full">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-emerald-900">TEST PASSED: Session Storage Intact!</h2>
+                        <p class="text-sm text-emerald-700 mt-1 leading-relaxed">
+                            The browser successfully preserved the Session Storage context through the redirect loop. 
+                            The state token in the URL matches the state token stored in your browser. 
+                        </p>
+                    </div>
+                `;
+            } else if (!keyExists) {
+                // FAILURE CASE: STORAGE WAS LOST
+                banner.className = "bg-rose-50 border border-rose-200 rounded-xl p-6 mb-6 shadow-md flex items-start gap-4";
+                banner.innerHTML = `
+                    <div class="p-2 bg-rose-500 text-white rounded-full">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-rose-900">TEST FAILED: Session Storage Lost!</h2>
+                        <p class="text-sm text-rose-700 mt-1 leading-relaxed">
+                            The key <code class="bg-rose-100 px-1 py-0.5 rounded font-mono text-xs text-rose-800">${TARGET_KEY}</code> was <strong>not found</strong> in Session Storage. 
+                        </p>
+                    </div>
+                `;
+            } else {
+                // FAILURE CASE: MISMATCH
+                banner.className = "bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6 shadow-md flex items-start gap-4";
+                banner.innerHTML = `
+                    <div class="p-2 bg-amber-500 text-white rounded-full">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-amber-900">TEST FAILED: Token Mismatch!</h2>
+                        <p class="text-sm text-amber-700 mt-1 leading-relaxed">
+                            The transaction key exists in Session Storage, but the state token does not match the URL parameter.
+                            <br><span class="font-semibold">URL State:</span> <code class="font-mono text-xs bg-amber-100 px-1 rounded">${urlState}</code>
+                            <br><span class="font-semibold">Stored State:</span> <code class="font-mono text-xs bg-amber-100 px-1 rounded">${storedState}</code>
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateRawStorageDisplay() {
+            const display = document.getElementById('rawStorageDisplay');
+            if (sessionStorage.length === 0) {
+                display.innerHTML = '<span class="text-slate-500">// Session storage is currently empty</span>';
+                return;
+            }
+
+            const data = {};
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                try {
+                    data[key] = JSON.parse(sessionStorage.getItem(key));
+                } catch {
+                    data[key] = sessionStorage.getItem(key);
+                }
+            }
+            display.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function clearStorage() {
+            sessionStorage.clear();
+            runDiagnostics();
+            alert('Session Storage cleared!');
+        }
+
+        function startOver() {
+            window.location.href = 'index.html';
+        }
+
+        window.onload = runDiagnostics;
+    </script>
+</body>
+</html>
